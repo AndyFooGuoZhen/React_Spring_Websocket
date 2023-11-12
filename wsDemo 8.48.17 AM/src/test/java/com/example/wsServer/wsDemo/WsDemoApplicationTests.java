@@ -1,10 +1,10 @@
-package com.involveininnovation.chat;
+package com.example.wsServer.wsDemo;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ChatApplicationTests {
+class WsDemoApplicationTests {
 
 	@Test
 	void contextLoads() {
