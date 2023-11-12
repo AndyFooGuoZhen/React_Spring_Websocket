@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react'
 import {over} from 'stompjs';
 import SockJS from 'sockjs-client';
+import chatService from './chatService';
 
 var stompClient =null;
 const ChatRoom = () => {
+
     const [privateChats, setPrivateChats] = useState(new Map());     
     const [publicChats, setPublicChats] = useState([]); 
     const [tab,setTab] =useState("CHATROOM");
@@ -13,9 +15,28 @@ const ChatRoom = () => {
         connected: false,
         message: ''
       });
+
     useEffect(() => {
-      console.log(userData);
-    }, [userData]);
+        getPublicChatHistory(publicChatRoomId);
+    //   console.log(userData);
+    //   console.log(publicChats); 
+    //   console.log(privateChats);
+    }, []);
+
+    let publicChatRoomId = 1;
+    let privateChatRoomId = 2;
+
+    const getPublicChatHistory = (id)=>{
+        chatService
+        .getChatHistory(id)
+        .then((response)=>{
+            console.log(response.data);
+            setPublicChats(response.data.messages);
+        }).catch((error) => {
+            console.log("Error fetching chat history info from DB");
+          });
+      
+    }
 
     const connect =()=>{
         let Sock = new SockJS('http://localhost:8080/ws');
@@ -35,7 +56,7 @@ const ChatRoom = () => {
             senderName: userData.username,
             status:"JOIN"
           };
-          stompClient.send("/app/message", {}, JSON.stringify(chatMessage));
+          stompClient.send("/app/message", {'token':publicChatRoomId}, JSON.stringify(chatMessage));
     }
 
     const onMessageReceived = (payload)=>{
@@ -85,7 +106,7 @@ const ChatRoom = () => {
                 status:"MESSAGE"
               };
               console.log(chatMessage);
-              stompClient.send("/app/message", {}, JSON.stringify(chatMessage));
+              stompClient.send("/app/message", {'token':publicChatRoomId}, JSON.stringify(chatMessage));
               setUserData({...userData,"message": ""});
             }
     }
@@ -103,7 +124,7 @@ const ChatRoom = () => {
             privateChats.get(tab).push(chatMessage);
             setPrivateChats(new Map(privateChats));
           }
-          stompClient.send("/app/private-message", {}, JSON.stringify(chatMessage));
+          stompClient.send("/app/private-message", {'token':privateChatRoomId}, JSON.stringify(chatMessage));
           setUserData({...userData,"message": ""});
         }
     }
